@@ -1,0 +1,441 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FOKIRA CAFE</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body{background:#fdf6ef}
+.food-img{height:145px;width:100%;object-fit:cover;border-radius:12px;background:#eee}
+@media print {
+  @page { size: A4; margin: 10mm; }
+  html, body { background:#fff !important; margin:0 !important; padding:0 !important; }
+  body * { visibility:hidden !important; }
+  #billModal, #billModal * { visibility:visible !important; }
+  #billModal {
+    display:block !important; position:absolute !important; inset:0 !important;
+    width:100% !important; height:auto !important; overflow:visible !important;
+    padding:0 !important; margin:0 !important; background:#fff !important;
+  }
+  #billPaper {
+    width:100% !important; max-width:100% !important; margin:0 auto !important;
+    box-shadow:none !important; border:1px solid #eee !important;
+    border-radius:12px !important; overflow:visible !important;
+  }
+  .no-print { display:none !important; }
+  #billPaper .print-color { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+}
+</style>
+</head>
+<body class="min-h-screen">
+
+<nav class="flex justify-between items-center px-5 lg:px-20 py-4 bg-white shadow sticky top-0 z-50">
+<h1 class="font-black text-xl">FOKIRA <span class="text-orange-500">CAFE</span></h1>
+<div class="flex gap-2">
+<button onclick="openProfile()" class="bg-slate-100 px-4 py-2 rounded-full text-xs font-bold">
+<i class="fa-solid fa-user"></i> <span id="userName">Profile</span>
+</button>
+<button onclick="document.getElementById('cartSection').scrollIntoView({behavior:'smooth'})" class="bg-black text-white px-4 py-2 rounded-full text-xs">
+Cart <span id="cartCount">0</span> - <span id="total2">0</span> TK
+</button>
+</div>
+</nav>
+
+<div id="profileModal" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+<div class="bg-white w-full max-w-md rounded-3xl p-6">
+<h2 class="font-black text-lg">My Profile</h2>
+<input id="pName" placeholder="Full Name" class="w-full border p-3 rounded-xl text-sm mt-3">
+<input id="pPhone" placeholder="Phone Number" class="w-full border p-3 rounded-xl text-sm mt-2">
+<input id="pAddress" placeholder="Delivery Address" class="w-full border p-3 rounded-xl text-sm mt-2">
+<button onclick="saveProfile()" class="w-full bg-orange-500 text-white py-3 rounded-full font-bold mt-3">Save Profile</button>
+<button onclick="logoutProfile()" class="w-full bg-red-50 text-red-600 border py-2 rounded-full text-xs font-bold mt-2">Log Out</button>
+<button onclick="closeProfile()" class="w-full bg-slate-100 py-2 rounded-full text-xs mt-2">Close</button>
+<div id="profileOrders" class="mt-3 text-xs border-t pt-2"></div>
+</div>
+</div>
+
+<div id="billModal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+  <div id="billPaper" class="w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl my-auto">
+    <div class="print-color bg-gradient-to-r from-orange-500 to-red-500 p-6 text-white">
+      <div class="flex justify-between items-center gap-3">
+        <div>
+          <h2 class="text-2xl font-black tracking-wide">FOKIRA <span class="text-black">CAFE</span></h2>
+          <p class="text-xs mt-1 opacity-90">FRESH FOOD • HAPPY MOMENTS</p>
+        </div>
+        <div class="bg-white/20 rounded-2xl p-3 text-2xl"><i class="fa-solid fa-receipt"></i></div>
+      </div>
+      <div class="mt-5 flex justify-between items-end gap-2">
+        <div><p class="text-xs opacity-80">INVOICE NUMBER</p><h3 id="bInv" class="font-black text-lg">FOK-00000</h3></div>
+        <span class="bg-white text-orange-600 px-3 py-2 rounded-full text-xs font-black">ORDER BILL</span>
+      </div>
+    </div>
+    <div class="p-5">
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-orange-50 p-3 rounded-xl"><p class="text-[10px] text-gray-500 font-bold">CUSTOMER NAME</p><p id="bName" class="text-sm font-bold mt-1 break-words">Customer</p></div>
+        <div class="bg-blue-50 p-3 rounded-xl"><p class="text-[10px] text-gray-500 font-bold">ORDER DATE</p><p id="bDate" class="text-xs font-bold mt-1">Date</p></div>
+        <div class="bg-purple-50 p-3 rounded-xl"><p class="text-[10px] text-gray-500 font-bold">PHONE</p><p id="bPhone" class="text-xs font-bold mt-1 break-words">Phone</p></div>
+        <div class="bg-green-50 p-3 rounded-xl"><p class="text-[10px] text-gray-500 font-bold">DELIVERY ADDRESS</p><p id="bAddress" class="text-xs font-bold mt-1 break-words">Address</p></div>
+      </div>
+      <div class="mt-6">
+        <h3 class="font-black text-sm mb-3"><i class="fa-solid fa-basket-shopping text-orange-500 mr-2"></i>ORDER DETAILS</h3>
+        <div class="rounded-xl overflow-hidden border">
+          <div class="grid grid-cols-[1fr_auto] gap-2 bg-gray-900 text-white p-3 text-xs font-bold print-color"><span>Food Item</span><span>Price</span></div>
+          <div id="bItems" class="p-3 space-y-3 text-xs"></div>
+        </div>
+      </div>
+      <div class="mt-4 bg-green-50 border border-green-200 rounded-xl p-3">
+        <div class="flex justify-between items-center gap-2">
+          <div><p class="text-xs font-black text-green-700"><i class="fa-solid fa-gift mr-1"></i>BUY 2 GET 1 FREE</p><p class="text-[10px] text-green-600 mt-1">Cheapest eligible item free</p></div>
+          <p id="bDiscount" class="font-black text-green-700 text-sm">0 TK</p>
+        </div>
+      </div>
+      <div class="print-color mt-4 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-5 text-white">
+        <p class="text-xs font-bold opacity-90">TOTAL PAYABLE</p>
+        <div class="flex justify-between items-center mt-1"><h3 id="bTotal" class="text-3xl font-black">0 TK</h3><i class="fa-solid fa-circle-check text-3xl"></i></div>
+        <p class="text-[10px] mt-2 opacity-90">Thank you for ordering with Fokira Cafe!</p>
+      </div>
+      <div class="text-center mt-5 border-t border-dashed pt-4">
+        <p class="font-black text-sm">FOKIRA <span class="text-orange-500">CAFE</span></p>
+        <p class="text-[10px] text-gray-500 mt-1">College Road, Rangpur-5400</p>
+        <p class="text-[10px] text-gray-500 mt-1">Fresh Food • Fast Delivery</p>
+      </div>
+      <div class="flex gap-2 mt-5 no-print">
+        <button onclick="window.print()" class="flex-1 bg-gray-900 text-white py-3 rounded-xl text-sm font-bold"><i class="fa-solid fa-print mr-2"></i>Print Bill</button>
+        <button onclick="closeBill()" class="flex-1 bg-orange-100 text-orange-700 py-3 rounded-xl text-sm font-bold">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6">
+
+<div class="flex gap-2 flex-wrap mt-6" id="categories">
+<button onclick="filterCat('All')" class="cat-btn bg-black text-white px-4 py-2 rounded-full text-xs font-bold">All 20</button>
+<button onclick="filterCat('Burger')" class="cat-btn bg-white border px-4 py-2 rounded-full text-xs font-bold">Burger</button>
+<button onclick="filterCat('Biriyani')" class="cat-btn bg-white border px-4 py-2 rounded-full text-xs font-bold">Biriyani</button>
+<button onclick="filterCat('Pizza')" class="cat-btn bg-white border px-4 py-2 rounded-full text-xs font-bold">Pizza</button>
+<button onclick="filterCat('Drinks')" class="cat-btn bg-white border px-4 py-2 rounded-full text-xs font-bold">Drinks</button>
+<button onclick="filterCat('Snacks')" class="cat-btn bg-white border px-4 py-2 rounded-full text-xs font-bold">Snacks</button>
+<button onclick="filterCat('Offer')" class="cat-btn bg-orange-500 text-white px-4 py-2 rounded-full text-xs font-bold">🔥 Buy 2 Get 1</button>
+</div>
+
+<div class="mt-4 bg-gradient-to-r from-orange-500 to-red-500 text-white p-3 rounded-xl text-xs font-bold">
+🎉 BUY 2 GET 1 FREE — Add 3 items, cheapest item free!
+</div>
+
+<div id="foodGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-5"></div>
+
+<section id="cartSection" class="flex justify-center mt-10">
+<div class="w-full max-w-2xl bg-white p-6 rounded-2xl shadow-xl border">
+<h3 class="font-black text-lg">Your Cart</h3>
+<div id="cartList" class="mt-4 space-y-2">
+<p class="text-xs text-slate-400">Cart empty - add items!</p>
+</div>
+<div id="discountInfo" class="text-xs text-green-600 font-bold mt-3"></div>
+<div class="flex justify-between font-black mt-4 border-t pt-3">
+<span>Total:</span><span id="grandTotal">0 TK</span>
+</div>
+<div class="flex gap-2 mt-4">
+<button onclick="clearCart()" class="px-4 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold">Clear All X</button>
+<button onclick="placeOrder()" class="flex-1 bg-orange-500 text-white py-3 rounded-full font-bold text-sm">Place Order & Get Bill</button>
+</div>
+</div>
+</section>
+</main>
+
+<footer class="bg-black text-white mt-16">
+<div class="max-w-7xl mx-auto px-6 lg:px-20 py-10 grid md:grid-cols-3 gap-8">
+<div>
+<h2 class="font-black text-xl">FOKIRA <span class="text-orange-500">CAFE</span></h2>
+<p class="text-xs text-gray-400 mt-2">Rangpur's most loved cafe. Fresh food, fast delivery.</p>
+</div>
+<div>
+<h3 class="font-bold text-sm">Contact & Location</h3>
+<p class="text-xs text-gray-400 mt-3"><i class="fa-solid fa-location-dot mr-2 text-orange-500"></i>College Road, Rangpur-5400</p>
+<p class="text-xs text-gray-400 mt-2"><i class="fa-solid fa-phone mr-2 text-orange-500"></i>01712-345678</p>
+<p class="text-xs text-gray-400 mt-2"><a href="https://www.fokiracafe.com" class="text-orange-400 underline">www.fokiracafe.com</a></p>
+</div>
+<div>
+<h3 class="font-bold text-sm">Quick Links</h3>
+<p class="text-xs text-gray-400 mt-3">Open: 10 AM - 11 PM</p>
+<p class="text-xs text-gray-400 mt-2">Delivery: 30-45 Min</p>
+</div>
+</div>
+<div class="border-t border-white/10 text-center py-4 text-[11px] text-gray-500">
+© 2026 Fokira Cafe
+</div>
+</footer>
+
+<script>
+const foods = [
+{name:"Classic Beef Burger",price:180,cat:"Burger",img:"https://images.unsplash.com/photo-1568909344668-6f14a07b56a0?w=600&h=400&fit=crop"},
+{name:"Chicken Burger",price:160,cat:"Burger",img:"https://images.unsplash.com/photo-1550547660-d9450f859349?w=600&h=400&fit=crop"},
+{name:"Chicken Biriyani",price:220,cat:"Biriyani",img:"https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=600&h=400&fit=crop"},
+{name:"Beef Biriyani",price:280,cat:"Biriyani",img:"https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&h=400&fit=crop"},
+{name:"Mutton Biriyani",price:320,cat:"Biriyani",img:"https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&h=400&fit=crop"},
+{name:"Cold Coffee",price:120,cat:"Drinks",img:"https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=600&h=400&fit=crop"},
+{name:"Chocolate Shake",price:140,cat:"Drinks",img:"https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&h=400&fit=crop"},
+{name:"Lassi",price:70,cat:"Drinks",img:"https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600&h=400&fit=crop"},
+{name:"Oreo Shake",price:150,cat:"Drinks",img:"https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=600&h=400&fit=crop"},
+{name:"Chicken Pizza",price:450,cat:"Pizza",img:"https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&h=400&fit=crop"},
+{name:"Pasta",price:220,cat:"Pizza",img:"https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600&h=400&fit=crop"},
+{name:"French Fries",price:80,cat:"Snacks",img:"https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=600&h=400&fit=crop"},
+{name:"Chicken Wings",price:200,cat:"Snacks",img:"https://images.unsplash.com/photo-1527477396000-e27163b481c2?w=600&h=400&fit=crop"},
+{name:"Fried Rice & Chicken",price:250,cat:"Snacks",img:"https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&h=400&q=80"},
+{name:"Grill Chicken",price:350,cat:"Snacks",img:"https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=600&h=400&fit=crop"},
+{name:"Naan Kebab",price:180,cat:"Snacks",img:"https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&h=400&fit=crop"},
+{name:"Chicken Sandwich",price:130,cat:"Snacks",img:"https://images.unsplash.com/photo-1521390188846-e2a3a97453a0?w=600&h=400&fit=crop"},
+{name:"Chicken Roll",price:100,cat:"Snacks",img:"https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=600&h=400&fit=crop"},
+{name:"Fish & Chips",price:200,cat:"Snacks",img:"https://images.unsplash.com/photo-1580217593608-61931cefc821?w=600&h=400&fit=crop"},
+{name:"Fokira Platter OFFER",price:550,cat:"Offer",img:"https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&h=400&fit=crop"}
+];
+
+let cart = [];
+let profile = null;
+
+try {
+profile = JSON.parse(localStorage.getItem("fokira_profile") || "null");
+} catch(e) {
+profile = null;
+}
+
+function render(category="All") {
+const grid = document.getElementById("foodGrid");
+grid.innerHTML = "";
+
+let list = category === "All" ? foods :
+category === "Offer" ? foods.filter(f => f.cat === "Offer") :
+foods.filter(f => f.cat === category);
+
+list.forEach((food,index) => {
+const card = document.createElement("div");
+card.className = "bg-white p-3 rounded-2xl shadow-sm border";
+
+const img = document.createElement("img");
+img.src = food.img;
+img.alt = food.name;
+img.loading = "lazy";
+img.className = "food-img";
+img.onerror = function() {
+this.onerror = null;
+this.src = "https://placehold.co/600x400/FDF6EF/333?text=Image+Unavailable";
+};
+
+const name = document.createElement("h3");
+name.className = "font-bold mt-2 text-xs";
+name.textContent = food.name;
+
+const categoryText = document.createElement("p");
+categoryText.className = "text-[10px] text-slate-500";
+categoryText.textContent = food.cat + " - " + food.price + " TK";
+
+const bottom = document.createElement("div");
+bottom.className = "flex justify-between items-center mt-3";
+
+const price = document.createElement("span");
+price.className = "font-black text-orange-500 text-xs";
+price.textContent = food.price + " TK";
+
+const add = document.createElement("button");
+add.className = "bg-black text-white px-3 py-2 rounded-full text-xs font-bold";
+add.textContent = "Add +";
+add.onclick = () => addCart(food.name,food.price);
+
+bottom.append(price,add);
+card.append(img,name,categoryText,bottom);
+grid.appendChild(card);
+});
+}
+
+function filterCat(category) {
+document.querySelectorAll(".cat-btn").forEach(btn => {
+btn.classList.remove("bg-black","text-white");
+btn.classList.add("bg-white");
+});
+render(category);
+}
+
+function calcDiscount() {
+const total = cart.reduce((sum,item) => sum + item.price,0);
+const freeCount = Math.floor(cart.length / 3);
+const sortedPrices = cart.map(item => item.price).sort((a,b) => a-b);
+const discount = sortedPrices.slice(0,freeCount).reduce((sum,p) => sum+p,0);
+return {discount,final:total-discount};
+}
+
+function addCart(name,price) {
+cart.push({id:Date.now()+Math.random(),name,price:Number(price)});
+updateCart();
+}
+
+function removeItem(id) {
+cart = cart.filter(item => item.id !== id);
+updateCart();
+}
+
+function clearCart() {
+cart = [];
+updateCart();
+}
+
+function updateCart() {
+const discount = calcDiscount();
+document.getElementById("cartCount").textContent = cart.length;
+document.getElementById("total2").textContent = discount.final;
+document.getElementById("grandTotal").textContent = discount.final + " TK";
+
+const list = document.getElementById("cartList");
+list.innerHTML = "";
+
+if(!cart.length) {
+list.innerHTML = '<p class="text-xs text-slate-400">Cart empty - add items!</p>';
+} else {
+cart.forEach(item => {
+const row = document.createElement("div");
+row.className = "flex justify-between items-center bg-slate-50 p-3 rounded-xl text-xs";
+
+const label = document.createElement("span");
+label.className = "font-semibold";
+label.textContent = item.name + " - " + item.price + " TK";
+
+const remove = document.createElement("button");
+remove.className = "bg-white border text-red-600 px-3 py-1 rounded-full text-xs font-bold";
+remove.textContent = "Cancel X";
+remove.onclick = () => removeItem(item.id);
+
+row.append(label,remove);
+list.appendChild(row);
+});
+}
+
+document.getElementById("discountInfo").textContent =
+discount.discount > 0
+? "Buy 2 Get 1 Applied! Discount: -" + discount.discount + " TK"
+: "Add 3 items to get the cheapest item free.";
+}
+
+function openProfile() {
+document.getElementById("profileModal").classList.remove("hidden");
+
+document.getElementById("pName").value = profile?.name || "";
+document.getElementById("pPhone").value = profile?.phone || "";
+document.getElementById("pAddress").value = profile?.address || "";
+
+let orders = [];
+try {
+orders = JSON.parse(localStorage.getItem("fokira_orders") || "[]");
+} catch(e) {}
+
+document.getElementById("profileOrders").textContent =
+orders.length ? "Previous orders: " + orders.length : "No orders yet";
+}
+
+function closeProfile() {
+document.getElementById("profileModal").classList.add("hidden");
+}
+
+function saveProfile() {
+const name = document.getElementById("pName").value.trim();
+const phone = document.getElementById("pPhone").value.trim();
+const address = document.getElementById("pAddress").value.trim();
+
+if(!name || !phone) {
+alert("Please enter your name and phone number.");
+return;
+}
+
+profile = {name,phone,address};
+localStorage.setItem("fokira_profile",JSON.stringify(profile));
+document.getElementById("userName").textContent = name.split(" ")[0];
+closeProfile();
+}
+
+function logoutProfile() {
+localStorage.removeItem("fokira_profile");
+profile = null;
+document.getElementById("userName").textContent = "Profile";
+closeProfile();
+}
+
+function placeOrder() {
+if(!cart.length) {
+alert("Your cart is empty.");
+return;
+}
+
+if(!profile) {
+alert("Please create your profile first.");
+openProfile();
+return;
+}
+
+const calculation = calcDiscount();
+const invoice = "FOK-" + Math.floor(10000 + Math.random()*90000);
+const date = new Date().toLocaleString();
+
+const bill = {
+invoice,
+date,
+items:cart.map(item => ({...item})),
+total:calculation.final,
+discount:calculation.discount,
+profile:{...profile}
+};
+
+let orders = [];
+try {
+orders = JSON.parse(localStorage.getItem("fokira_orders") || "[]");
+} catch(e) {}
+
+orders.push(bill);
+localStorage.setItem("fokira_orders",JSON.stringify(orders));
+localStorage.setItem("fokira_lastbill",JSON.stringify(bill));
+
+showBill(bill);
+cart = [];
+updateCart();
+}
+
+function showBill(bill) {
+  document.getElementById("bName").textContent = bill.profile?.name || "Customer";
+  document.getElementById("bPhone").textContent = bill.profile?.phone || "N/A";
+  document.getElementById("bAddress").textContent = bill.profile?.address || "Not provided";
+  document.getElementById("bInv").textContent = bill.invoice || "N/A";
+  document.getElementById("bDate").textContent = bill.date || new Date().toLocaleString();
+
+  const items = document.getElementById("bItems");
+  items.innerHTML = "";
+  (bill.items || []).forEach((item, index) => {
+    const row = document.createElement("div");
+    row.className = "grid grid-cols-[1fr_auto] gap-2 items-center border-b border-gray-100 pb-2";
+    const name = document.createElement("span");
+    name.className = "font-semibold text-gray-800";
+    name.textContent = (index + 1) + ". " + (item.name || "Food Item");
+    const price = document.createElement("span");
+    price.className = "font-black text-orange-600 whitespace-nowrap";
+    price.textContent = (Number(item.price) || 0) + " TK";
+    row.append(name, price);
+    items.appendChild(row);
+  });
+
+  document.getElementById("bDiscount").textContent = (Number(bill.discount) || 0) + " TK";
+  document.getElementById("bTotal").textContent = (Number(bill.total) || 0) + " TK";
+  document.getElementById("billModal").classList.remove("hidden");
+}
+
+function closeBill() {
+document.getElementById("billModal").classList.add("hidden");
+}
+
+render();
+updateCart();
+
+if(profile) {
+document.getElementById("userName").textContent = profile.name.split(" ")[0];
+}
+</script>
+</body>
+</html>
